@@ -1,0 +1,7 @@
+# Basic ignores
+.DS_Store
+.idea
+*.iml
+
+# Python ignores
+__pycache__
