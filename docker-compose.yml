@@ -5,15 +5,42 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./docker/Dockerfile
       target: dev
     ports:
       - "8000:8000"
     volumes:
-      - './:/app'
+      - "./requirements.txt:/code/requirements.txt"
+      - "./app:/code/app"
     networks:
      - app
+    environment:
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_DATABASE: "${DB_DATABASE}"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13.6-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:${DB_FORWARD_PORT:-5432}:5432"
+    volumes:
+      - "apppostgres:/var/lib/postgresql/data:cached"
+    networks:
+      - app
+    environment:
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_DATABASE}"
 
 networks:
   app:
     driver: bridge
+
+volumes:
+  apppostgres:
+    driver: local
