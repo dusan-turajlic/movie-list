@@ -5,12 +5,12 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./docker/Dockerfile
       target: dev
     ports:
       - "8000:8000"
     volumes:
-      - './:/app'
+      - './app:/code/app'
     networks:
      - app
 
