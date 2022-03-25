@@ -5,3 +5,6 @@
 
 # Python ignores
 __pycache__
+
+# Envierment
+.env
