@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# It's a vibe ok!
+# Made this script to have some quick command that I can run when I'm fully running in docker
+
+APP_SERVICE="app"
+DATABASE_SERVICE="postgres"
+dc=docker-compose
+
+# Gets the needed environment variables
+source .env
+
+case "$1" in
+  "up" | "down")
+    $dc "$@";;
+  "reboot")
+    $dc down && $dc up -d;;
+  "tinker")
+    $dc exec $APP_SERVICE python;;
+  "check")
+    $dc ps;;
+  "logs")
+    $dc logs --follow $APP_SERVICE;;
+  "db")
+    shift 1
+    $dc exec $DATABASE_SERVICE "$@";;
+  "db:connect")
+    shift 1
+    $dc exec $DATABASE_SERVICE psql -U $DB_USERNAME $DB_DATABASE;;
+  *)
+    $dc exec $APP_SERVICE "$@";;
+esac
+
