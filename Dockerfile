@@ -2,6 +2,7 @@ ARG PYTHON_VERSION="3.10.3-slim"
 ARG APP_USER="application"
 
 FROM python:${PYTHON_VERSION} as base
+
 ENV APP_HOME="/home/application/movie-list"
 ENV PATH="/home/application/.local/bin:$PATH"
 
