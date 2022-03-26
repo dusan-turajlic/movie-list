@@ -9,8 +9,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - "./requirements.txt:/home/application/requirements.txt"
-      - "./app:/home/application/app"
+      - ".:/home/application/movie-list/"
     networks:
      - app
     environment:
