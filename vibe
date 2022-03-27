@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# It's a vibe ok!
-# Made this script to have some quick command that I can run when I'm fully running in docker
+# Yea this thing kinda got out of control
 
 RED="$(tput setaf 1)"
 GREEN="$(tput setaf 2)"
@@ -10,7 +9,7 @@ NC="$(tput sgr0)"
 
 # Function that prints the available commands...
 function help {
-    echo "It's a Vibe ok!"
+    echo "$(tput setaf 13)$(tput bold)It's a Vibe!${NC}"
     echo
     echo "${YELLOW}Usage:${NC}" >&2
     echo "  vibe COMMAND [options] [arguments]"
@@ -29,7 +28,7 @@ function help {
     echo
     echo "${YELLOW}Python commands:${NC}"
     echo "  ${GREEN}vibe python ...${NC}            Run a snippet of python code"
-    echo "  ${GREEN}vibe tinker ${NC}               Opens python shell in the same virtual env as the application"
+    echo "  ${GREEN}vibe tinker${NC}                Opens python shell in the same virtual env as the application"
     echo
     echo "${YELLOW}Database Commands:${NC}"
     echo "  ${GREEN}vibe db ...${NC}                Executes anything inside the database container"
@@ -38,8 +37,9 @@ function help {
     echo "  ${GREEN}vibe migrate:rollback${NC}      Rolls back one migration using alembic"
     echo "  ${GREEN}vibe migrate:fresh${NC}         Drops all tables and starts from scratch"
     echo
-#    echo "${YELLOW}Running Tests:${NC}"
-#    echo "  ${GREEN}vibe test${NC}          Run the tests"
+    echo "${YELLOW}Running Tests:${NC}"
+    echo "  ${GREEN}vibe test${NC}                  Run the tests with pytest"
+    echo
 
     exit 1
 }
@@ -77,6 +77,9 @@ source .env
       $DC logs --follow $APP_SERVICE;;
     "tinker")
       $APP_EXEC python;;
+    "test")
+      shift 1
+      $APP_EXEC pytest;;
     "db")
       shift 1
       $DB_EXEC $DATABASE_SERVICE "$@";;
@@ -92,7 +95,10 @@ source .env
     "migrate:rollback")
       $APP_EXEC alembic downgrade -1;;
     "migrate:fresh")
-      $APP_EXEC alembic downgrade base && $APP_EXEC alembic downgrade head;;
+      $APP_EXEC alembic downgrade base
+      wait
+      $APP_EXEC alembic upgrade head
+      ;;
     *)
       $APP_EXEC "$@";;
   esac
