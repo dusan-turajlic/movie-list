@@ -1,0 +1,32 @@
+name: Quality checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+    services:
+      postgres:
+        image: postgres:13.6-alpine
+        env:
+          POSTGRES_USER: "movielist"
+          POSTGRES_PASSWORD: "movielist"
+          POSTGRES_DB: "movielist"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run database migratiosn
+        run: alembic upgrade head
+      - name: Run tests
+        run: pytest
