@@ -1,25 +1,25 @@
 import uuid
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.engine import Connectable
 
-from app.database.models import Media
 from app.database.schemas.media import MediaCreate
+from app.database.tables import media
 
 
-def get_media(db: Session, media_id: str):
-    return db.query(Media).filter(Media.uuid == media_id).first()
+def get_media(db: Connectable, media_slug: str):
+    query = select(media).where(media.c.slug == media_slug)
+    return db.execute(query).mappings().first()
 
 
-def get_all_media(db: Session):
-    return db.query(Media).all()
+def get_all_media(db: Connectable):
+    result = db.execute(select(media))
+    return result.mappings().all()
 
 
-def create_media(db: Session, media_item: MediaCreate):
-    db_media_item = Media(slug=uuid.uuid4(), type=media_item.type, rating=media_item.rating)
-    db.add(db_media_item)
-    db.commit()
-    db.refresh(db_media_item)
-
-    return db_media_item
-
+def create_media(db: Connectable, media_item: MediaCreate):
+    media_item = {"slug": str(uuid.uuid4()), **media_item.dict()}
+    insert = media.insert().values(**media_item)
+    db.execute(insert)
+    return media_item
 

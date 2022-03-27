@@ -19,17 +19,17 @@ def upgrade():
     op.create_table(
         "actor",
         sa.Column("id", sa.Integer, unique=True, primary_key=True, autoincrement=True, nullable=False, index=True),
-        sa.Column("slug", sa.String(36), nullable=False, unique=True),
-        sa.Column("firstname", sa.String(35), nullable=False),
-        sa.Column("lastname", sa.String(35), nullable=False)
+        sa.Column("slug", sa.String(36), nullable=False, unique=True, index=False),
+        sa.Column("firstname", sa.String(35), nullable=False, index=False),
+        sa.Column("lastname", sa.String(35), nullable=False, index=False)
     )
 
     op.create_table(
         "media",
         sa.Column("id", sa.Integer, unique=True, primary_key=True, autoincrement=True, nullable=False, index=True),
-        sa.Column("slug", sa.String(36), nullable=False, unique=True),
+        sa.Column("slug", sa.String(36), nullable=False, unique=True, index=False),
         sa.Column("type", sa.Integer, nullable=False, index=True),
-        sa.Column("rating", sa.Integer, nullable=True)
+        sa.Column("rating", sa.Integer, nullable=True, index=False)
     )
 
     op.create_table(
@@ -43,13 +43,13 @@ def upgrade():
         sa.Column("id", sa.Integer, unique=True, primary_key=True, autoincrement=True, nullable=False, index=True),
         sa.Column("language", sa.Integer, nullable=False, index=True),
         sa.Column("name", sa.Integer, nullable=False, index=True),
-        sa.Column("value", sa.String(500), nullable=False),
-        sa.Column("media_id", sa.Integer, sa.ForeignKey("media.id"), nullable=False)
+        sa.Column("value", sa.String(500), nullable=False, index=False),
+        sa.Column("media_id", sa.Integer, sa.ForeignKey("media.id"), nullable=False, index=True)
     )
 
 
 def downgrade():
+    op.drop_table("media_translation")
+    op.drop_table("actor_media")
     op.drop_table("actor")
     op.drop_table("media")
-    op.drop_table("actor_media")
-    op.drop_table("media_translation")

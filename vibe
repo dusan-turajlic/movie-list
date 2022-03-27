@@ -3,31 +3,105 @@
 # It's a vibe ok!
 # Made this script to have some quick command that I can run when I'm fully running in docker
 
+RED="$(tput setaf 1)"
+GREEN="$(tput setaf 2)"
+YELLOW="$(tput setaf 3)"
+NC="$(tput sgr0)"
+
+# Function that prints the available commands...
+function help {
+    echo "It's a Vibe ok!"
+    echo
+    echo "${YELLOW}Usage:${NC}" >&2
+    echo "  vibe COMMAND [options] [arguments]"
+    echo
+    echo "Unknown commands are passed to the docker-compose binary."
+    echo
+    echo "${YELLOW}docker-compose Commands:${NC}"
+    echo "  ${GREEN}vibe up${NC}                    Start the application"
+    echo "  ${GREEN}vibe up -d${NC}                 Start the application in the background"
+    echo "  ${GREEN}vibe stop${NC}                  Stop the application"
+    echo "  ${GREEN}vibe reboot${NC}                Restart the application"
+    echo "  ${GREEN}vibe check${NC}                 Display the status of all containers"
+    echo
+    echo "${YELLOW}Pip commands:${NC}"
+    echo "  ${GREEN}vibe pip ...${NC}               Runs pip inside the container"
+    echo
+    echo "${YELLOW}Python commands:${NC}"
+    echo "  ${GREEN}vibe python ...${NC}            Run a snippet of python code"
+    echo "  ${GREEN}vibe tinker ${NC}               Opens python shell in the same virtual env as the application"
+    echo
+    echo "${YELLOW}Database Commands:${NC}"
+    echo "  ${GREEN}vibe db ...${NC}                Executes anything inside the database container"
+    echo "  ${GREEN}vibe migrate ...${NC}           Alias for alembic upgrade"
+    echo "  ${GREEN}vibe migrate:create ...${NC}    Creates a new migration using alembic"
+    echo "  ${GREEN}vibe migrate:rollback${NC}      Rolls back one migration using alembic"
+    echo "  ${GREEN}vibe migrate:fresh${NC}         Drops all tables and starts from scratch"
+    echo
+#    echo "${YELLOW}Running Tests:${NC}"
+#    echo "  ${GREEN}vibe test${NC}          Run the tests"
+
+    exit 1
+}
+
+if [ $# -gt 0 ]; then
+    if [ "$1" == "help" ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+        help
+    fi
+else
+    help
+fi
+
 APP_SERVICE="app"
 DATABASE_SERVICE="postgres"
-dc=docker-compose
+DC="docker compose"
+if [ -x "$(command -v docker-compose)" ]; then
+   DC="docker-compose"
+fi
+
+APP_EXEC="$DC exec $APP_SERVICE"
+DB_EXEC="$DC exec $DATABASE_SERVICE"
 
 # Gets the needed environment variables
 source .env
 
-case "$1" in
-  "up" | "down")
-    $dc "$@";;
-  "reboot")
-    $dc down && $dc up -d;;
-  "tinker")
-    $dc exec $APP_SERVICE python;;
-  "check")
-    $dc ps;;
-  "logs")
-    $dc logs --follow $APP_SERVICE;;
-  "db")
-    shift 1
-    $dc exec $DATABASE_SERVICE "$@";;
-  "db:connect")
-    shift 1
-    $dc exec $DATABASE_SERVICE psql -U $DB_USERNAME $DB_DATABASE;;
-  *)
-    $dc exec $APP_SERVICE "$@";;
-esac
-
+{
+  case "$1" in
+    "up" | "down")
+      $DC "$@";;
+    "reboot")
+      $DC restart;;
+    "check")
+      $DC ps;;
+    "logs")
+      $DC logs --follow $APP_SERVICE;;
+    "tinker")
+      $APP_EXEC python;;
+    "db")
+      shift 1
+      $DB_EXEC $DATABASE_SERVICE "$@";;
+    "db:shell")
+      # The $DB_USERNAME and $DB_DATABASE come from the .env file
+      $DB_EXEC psql -U $DB_USERNAME $DB_DATABASE;;
+    "migrate")
+      shift 1
+      $APP_EXEC alembic upgrade "$@";;
+    "migrate:create")
+      shift 1
+      $APP_EXEC alembic create -m "$@";;
+    "migrate:rollback")
+      $APP_EXEC alembic downgrade -1;;
+    "migrate:fresh")
+      $APP_EXEC alembic downgrade base && $APP_EXEC alembic downgrade head;;
+    *)
+      $APP_EXEC "$@";;
+  esac
+} || {
+  # Checks if service are running
+  CHECK=$($DC ps)
+  if [[ ${CHECK} != *"$APP_SERVICE"* ]]; then
+    echo "${RED}Well this did not pass the vibe check! Maybe up your vibe${NC}"
+    echo
+    echo "${YELLOW}Looks like no containers are running try running 'vibe up'${NC}"
+  fi
+}
