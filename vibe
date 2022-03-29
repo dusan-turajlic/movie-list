@@ -79,7 +79,7 @@ source .env
       $APP_EXEC python;;
     "test")
       shift 1
-      $APP_EXEC pytest;;
+      $APP_EXEC pytest "$@";;
     "db")
       shift 1
       $DB_EXEC $DATABASE_SERVICE "$@";;
@@ -91,7 +91,7 @@ source .env
       $APP_EXEC alembic upgrade "$@";;
     "migrate:create")
       shift 1
-      $APP_EXEC alembic create -m "$@";;
+      $APP_EXEC alembic create -m "\"$*\"";;
     "migrate:rollback")
       $APP_EXEC alembic downgrade -1;;
     "migrate:fresh")
